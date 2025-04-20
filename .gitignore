@@ -13,6 +13,7 @@ dist/
 
 # Virtual Environment
 venv/
+venv_py311/
 env/
 .env
 

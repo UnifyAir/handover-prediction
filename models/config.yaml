@@ -1,0 +1,89 @@
+# Handover Prediction Model Configuration
+
+# Data Configuration
+data:
+  raw_data_path: "data/raw"
+  processed_data_path: "data/processed"
+  train_data_ratio: 0.7
+  val_data_ratio: 0.15
+  test_data_ratio: 0.15
+  sequence_length: 10
+  features:
+    - "rssi"
+    - "sinr"
+    - "rsrp"
+    - "rsrq"
+    - "latitude"
+    - "longitude"
+    - "speed"
+    - "direction"
+
+# Model Configuration
+model:
+  type: "lstm"
+  architecture:
+    input_shape: [10, 8]
+    hidden_units: [64, 32]
+    dropout_rate: 0.2
+    recurrent_dropout: 0.1
+    activation: "relu"
+    output_activation: "sigmoid"
+  
+  training:
+    batch_size: 32
+    epochs: 100
+    early_stopping_patience: 10
+    learning_rate: 0.001
+    optimizer: "adam"
+    loss: "binary_crossentropy"
+    metrics:
+      - "accuracy"
+      - "precision"
+      - "recall"
+      - "f1_score"
+
+# Feature Engineering
+features:
+  scaling:
+    method: "minmax" 
+    fit_on_train: true
+  
+  encoding:
+    categorical_features: []
+    encoding_method: "onehot"
+
+# Training Configuration
+training:
+  random_seed: 42
+  use_gpu: true
+  num_workers: 4
+  checkpoint_dir: "models/saved/checkpoints"
+  model_save_path: "models/saved/final_model"
+  tensorboard_dir: "models/saved/logs"
+
+# Evaluation Configuration
+evaluation:
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1_score"
+    - "roc_auc"
+  threshold: 0.5
+  cross_validation_folds: 5
+
+# Deployment Configuration
+deployment:
+  model_version: "1.0.0"
+  api_endpoint: "/predict"
+  batch_prediction_size: 100
+  timeout: 30  # seconds
+  max_retries: 3
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/model.log"
+  max_file_size: 10485760 
+  backup_count: 5

@@ -23,8 +23,6 @@ env/
 .DS_Store
 
 # Project specific
-data/
-models/
 *.csv
 *.h5
 *.pkl

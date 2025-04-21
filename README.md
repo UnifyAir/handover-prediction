@@ -1,10 +1,14 @@
 # 🚀 5G Handover Prediction
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Build Status](https://img.shields.io/github/workflow/status/unifyair/handover-prediction/main)](https://github.com/unifyair/handover-prediction/actions)
+[![Documentation Status](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://unifyair.io/docs)
+[![Hugging Face](https://img.shields.io/badge/Hugging%20Face-UnifyAir-blue)](https://huggingface.co/unifyair)
 
 ![UnifyAir Handover Prediction](https://unifyair.io/assets/blue_top.png)
 
-> A state-of-the-art deep learning framework for predicting user mobility patterns in 5G networks, enabling proactive handover optimization.
+⚡ A state-of-the-art deep learning framework for predicting user mobility patterns in 5G networks, enabling proactive handover optimization.
 
 ## 🌟 Features
 
@@ -64,8 +68,8 @@ mobility-prediction-5g/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/unifyair/mobility-prediction-5g.git
-   cd mobility-prediction-5g
+   git clone https://github.com/unifyair/handover-prediction.git
+   cd handover-prediction
    ```
 
 2. **Set up the environment**

@@ -9,8 +9,8 @@ inference:
   features:
     - x
     - y
-    - speed
-    - direction
+    - velocity
+    - heading
   
   # Output configuration
   output:

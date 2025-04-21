@@ -31,3 +31,4 @@ env/
 *.npy
 tensorboard/
 wandb/
+predictions/

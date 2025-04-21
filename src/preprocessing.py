@@ -19,7 +19,7 @@ def create_feature_scaler(data: pd.DataFrame) -> StandardScaler:
         Fitted StandardScaler
     """
     scaler = StandardScaler()
-    features = data[['x', 'y', 'speed', 'direction']].values
+    features = data[['x', 'y', 'velocity', 'heading']].values
     scaler.fit(features)
     return scaler
 

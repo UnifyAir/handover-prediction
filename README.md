@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Build Status](https://img.shields.io/github/workflow/status/unifyair/handover-prediction/main)](https://github.com/unifyair/handover-prediction/actions)
+[![Status](https://img.shields.io/badge/status-active-success.svg)](https://github.com/unifyair/handover-prediction)
 [![Documentation Status](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://unifyair.io/docs)
 [![Hugging Face](https://img.shields.io/badge/Hugging%20Face-UnifyAir-blue)](https://huggingface.co/unifyair)
 

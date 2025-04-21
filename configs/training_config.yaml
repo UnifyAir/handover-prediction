@@ -1,46 +1,16 @@
+model:
+  sequence_length: 20
+  prediction_horizon: 5
+  lstm_units: 64
+  dropout_rate: 0.3
+
 training:
-  # Model architecture
-  model:
-    type: lstm
-    layers:
-      - units: 128
-        dropout: 0.2
-        recurrent_dropout: 0.2
-      - units: 64
-        dropout: 0.2
-        recurrent_dropout: 0.2
-    output_units: 1
-    activation: sigmoid
-  
-  # Training parameters
-  parameters:
-    batch_size: 32
-    epochs: 100
-    validation_split: 0.2
-    early_stopping:
-      patience: 10
-      monitor: val_loss
-    learning_rate: 0.001
-    optimizer: adam
-  
-  # Data parameters
-  data:
-    sequence_length: 20
-    prediction_horizon: 5
-    features:
-      - x
-      - y
-      - speed
-      - direction
-    
-  # Output configuration
-  output:
-    save_model: true
-    save_history: true
-    save_scaler: true
-    metrics:
-      - accuracy
-      - precision
-      - recall
-      - f1_score
-      - confusion_matrix 
+  epochs: 50
+  batch_size: 64
+  validation_split: 0.15
+  test_split: 0.15
+  early_stopping_patience: 10
+  lr_reduction_factor: 0.5
+  lr_patience: 5
+  min_lr: 0.0001
+  random_seed: 42 

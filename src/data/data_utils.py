@@ -13,7 +13,7 @@ def load_mobility_data(file_path: str) -> pd.DataFrame:
     Load mobility data from a file.
     
     Args:
-        file_path: Path to the data file (.pkl or .csv)
+        file_path: Path to the data file (.pkl, .csv, or .parquet)
         
     Returns:
         DataFrame containing mobility data
@@ -23,6 +23,8 @@ def load_mobility_data(file_path: str) -> pd.DataFrame:
             return pickle.load(f)
     elif file_path.endswith('.csv'):
         return pd.read_csv(file_path)
+    elif file_path.endswith('.parquet'):
+        return pd.read_parquet(file_path)
     else:
         raise ValueError(f"Unsupported file format: {file_path}")
 
@@ -65,8 +67,8 @@ def prepare_data_for_inference(
         for i in range(len(user_data) - sequence_length + 1):
             sequence = user_data.iloc[i:i+sequence_length]
             
-            # Extract features (modify based on your feature set)
-            features = sequence[['x', 'y', 'speed', 'direction']].values
+            # Extract features (using the actual columns in the data)
+            features = sequence[['x', 'y', 'velocity', 'heading']].values
             
             # Apply scaling if provided
             if scaler is not None:

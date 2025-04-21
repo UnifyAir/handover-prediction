@@ -7,12 +7,14 @@ import os
 import argparse
 import yaml
 import sys
+import numpy as np
+from sklearn.preprocessing import StandardScaler
 
 # Add the project root to the Python path
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(PROJECT_ROOT)
 
-from src.data.data_utils import load_mobility_data, prepare_sequences
+from src.data.data_utils import load_mobility_data, prepare_data_for_inference
 from src.models.trainer import (
     prepare_train_val_test_split, 
     train_model, 
@@ -47,9 +49,39 @@ def load_config(config_path):
     if not os.path.isabs(config_path):
         config_path = os.path.join(PROJECT_ROOT, config_path)
     
-    with open(config_path, 'r') as f:
-        config = yaml.safe_load(f)
-    return config
+    # Create default config
+    default_config = create_default_config()
+    
+    # Check if config file exists
+    if not os.path.exists(config_path):
+        print(f"Config file not found at {config_path}. Using default configuration.")
+        return default_config
+    
+    # Load config from file
+    try:
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+        
+        # Ensure all required fields are present
+        if 'model' not in config:
+            config['model'] = default_config['model']
+        if 'training' not in config:
+            config['training'] = default_config['training']
+        
+        # Ensure model fields are present
+        for key in default_config['model']:
+            if key not in config['model']:
+                config['model'][key] = default_config['model'][key]
+        
+        # Ensure training fields are present
+        for key in default_config['training']:
+            if key not in config['training']:
+                config['training'][key] = default_config['training'][key]
+        
+        return config
+    except Exception as e:
+        print(f"Error loading config file: {e}. Using default configuration.")
+        return default_config
 
 
 def create_default_config():
@@ -104,11 +136,25 @@ def main():
     
     # Prepare sequences for LSTM
     print("Preparing sequences for training...")
-    X, y, scaler, feature_names = prepare_sequences(
+    X, timestamps, user_ids, connected_cells = prepare_data_for_inference(
         mobility_data, 
-        sequence_length=config['model']['sequence_length'],
-        prediction_horizon=config['model']['prediction_horizon']
+        sequence_length=config['model']['sequence_length']
     )
+    
+    # Create target sequences (you'll need to implement this based on your needs)
+    y = X[:, 1:, :]  # Using next timestep as target, adjust based on your needs
+    
+    # Create scaler and feature names for model artifacts
+    scaler = StandardScaler()
+    # Reshape X to 2D for scaling
+    X_reshaped = X.reshape(-1, X.shape[-1])
+    scaler.fit(X_reshaped)
+    # Apply scaling to X
+    X_scaled = scaler.transform(X_reshaped).reshape(X.shape)
+    X = X_scaled
+    
+    # Define feature names based on the actual data columns
+    feature_names = ['x', 'y', 'velocity', 'heading']
     
     print(f"Created {len(X):,} sequences with shape {X.shape}")
     

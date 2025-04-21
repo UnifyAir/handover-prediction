@@ -1,0 +1,27 @@
+inference:
+  # Prediction threshold for handover decisions
+  threshold: 0.5
+  
+  # Sequence length for prediction
+  sequence_length: 20
+  
+  # Feature configuration
+  features:
+    - x
+    - y
+    - speed
+    - direction
+  
+  # Output configuration
+  output:
+    format: json
+    save_predictions: true
+    save_probabilities: true
+    
+  # Performance metrics
+  metrics:
+    - accuracy
+    - precision
+    - recall
+    - f1_score
+    - confusion_matrix 

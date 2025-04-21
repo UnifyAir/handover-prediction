@@ -7,14 +7,18 @@ import yaml
 import argparse
 
 # Add the project root to the Python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(PROJECT_ROOT)
 
 from data.synthetic.generator import generate_synthetic_mobility_data, visualize_trajectories
 from data.processed.processor import add_network_conditions, prepare_sequences, create_balanced_dataset
 
-def load_config():
-    config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
-                              'data', 'synthetic', 'config.yaml')
+def load_config(config_path):
+    """Load configuration from YAML file."""
+    # Convert relative path to absolute if needed
+    if not os.path.isabs(config_path):
+        config_path = os.path.join(PROJECT_ROOT, config_path)
+    
     with open(config_path, 'r') as f:
         return yaml.safe_load(f)
 
@@ -23,14 +27,16 @@ def parse_args():
     parser.add_argument('--num-users', type=int, help='Number of users to generate')
     parser.add_argument('--days', type=int, help='Number of days to generate')
     parser.add_argument('--sampling-rate', type=int, help='Sampling rate in seconds')
+    parser.add_argument('--config', type=str, default='configs/generation_config.yaml',
+                        help='Path to generation configuration file')
     return parser.parse_args()
 
 def main():
-    # Load configuration
-    config = load_config()
-    
     # Parse command line arguments
     args = parse_args()
+    
+    # Load configuration
+    config = load_config(args.config)
     
     # Override config with command line arguments if provided
     num_users = args.num_users if args.num_users is not None else config['generator']['num_users']
@@ -38,8 +44,8 @@ def main():
     sampling_rate = args.sampling_rate if args.sampling_rate is not None else config['generator']['sampling_rate_seconds']
     
     # Create directories if they don't exist
-    os.makedirs('data/raw', exist_ok=True)
-    os.makedirs('data/processed', exist_ok=True)
+    os.makedirs(os.path.join(PROJECT_ROOT, 'data/raw'), exist_ok=True)
+    os.makedirs(os.path.join(PROJECT_ROOT, 'data/processed'), exist_ok=True)
     
     # Generate synthetic data
     print("Generating synthetic mobility data...")
@@ -54,7 +60,7 @@ def main():
     )
     
     # Save raw data
-    raw_data_path = config['output']['raw_data']
+    raw_data_path = os.path.join(PROJECT_ROOT, config['output']['raw_data'])
     raw_data.to_parquet(raw_data_path)
     print(f"Saved raw data to {raw_data_path}")
     
@@ -73,12 +79,12 @@ def main():
     X, y = prepare_sequences(processed_data)
     
     # Save processed data
-    processed_data_path = config['output']['processed_data']
+    processed_data_path = os.path.join(PROJECT_ROOT, config['output']['processed_data'])
     processed_data.to_parquet(processed_data_path)
     print(f"Saved processed data to {processed_data_path}")
     
     # Save balanced dataset
-    balanced_data_path = config['output']['balanced_data']
+    balanced_data_path = os.path.join(PROJECT_ROOT, config['output']['balanced_data'])
     balanced_data.to_parquet(balanced_data_path)
     print(f"Saved balanced dataset to {balanced_data_path}")
     
@@ -87,8 +93,9 @@ def main():
         'X': X,
         'y': y
     }
-    np.save(config['output']['sequence_data'], sequence_data)
-    print(f"Saved sequence data to {config['output']['sequence_data']}")
+    sequence_data_path = os.path.join(PROJECT_ROOT, config['output']['sequence_data'])
+    np.save(sequence_data_path, sequence_data)
+    print(f"Saved sequence data to {sequence_data_path}")
     
     # Print dataset statistics
     print("\nDataset Statistics:")

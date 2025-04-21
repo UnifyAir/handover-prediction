@@ -16,6 +16,7 @@ setup(
         "seaborn>=0.13.0",
         "joblib>=1.3.0",
         "pyyaml>=6.0.1",
+        "pyarrow>=19.0.1",
     ],
     python_requires=">=3.8",
     classifiers=[

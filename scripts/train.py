@@ -7,11 +7,13 @@ import os
 import argparse
 import yaml
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from data.data_utils import load_mobility_data
-from src.preprocessing import prepare_sequences
-from src.trainer import (
+# Add the project root to the Python path
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(PROJECT_ROOT)
+
+from src.data.data_utils import load_mobility_data, prepare_sequences
+from src.models.trainer import (
     prepare_train_val_test_split, 
     train_model, 
     evaluate_model, 
@@ -24,24 +26,53 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train mobility prediction model')
     
     parser.add_argument('--data', type=str, required=True, 
-                        help='Path to the mobility data file (.pkl or .csv)')
-    parser.add_argument('--config', type=str, default='../configs/model_config.yaml',
-                        help='Path to model configuration file')
-    parser.add_argument('--output', type=str, default='../models/saved',
+                        help='Path to the mobility data file (.parquet, .pkl, .csv, or .npy)')
+    parser.add_argument('--config', type=str, default='configs/training_config.yaml',
+                        help='Path to training configuration file')
+    parser.add_argument('--output', type=str, default='models/saved',
                         help='Directory to save the trained model')
     parser.add_argument('--epochs', type=int, default=None,
                         help='Number of training epochs (overrides config)')
     parser.add_argument('--batch_size', type=int, default=None,
                         help='Batch size for training (overrides config)')
+    parser.add_argument('--max_samples', type=int, default=None,
+                        help='Maximum number of samples to use (for memory efficiency)')
     
     return parser.parse_args()
 
 
 def load_config(config_path):
     """Load configuration from YAML file."""
+    # Convert relative path to absolute if needed
+    if not os.path.isabs(config_path):
+        config_path = os.path.join(PROJECT_ROOT, config_path)
+    
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
     return config
+
+
+def create_default_config():
+    """Create a default configuration."""
+    return {
+        'model': {
+            'sequence_length': 20,
+            'prediction_horizon': 5,
+            'lstm_units': 64,
+            'dropout_rate': 0.3
+        },
+        'training': {
+            'epochs': 50,
+            'batch_size': 64,
+            'validation_split': 0.15,
+            'test_split': 0.15,
+            'early_stopping_patience': 10,
+            'lr_reduction_factor': 0.5,
+            'lr_patience': 5,
+            'min_lr': 0.0001,
+            'random_seed': 42
+        }
+    }
 
 
 def main():
@@ -50,31 +81,11 @@ def main():
     args = parse_args()
     
     # Load configuration
-    try:
-        config = load_config(args.config)
-        print(f"Loaded configuration from {args.config}")
-    except Exception as e:
-        print(f"Error loading configuration: {e}")
-        print("Using default configuration")
-        config = {
-            'model': {
-                'sequence_length': 20,
-                'prediction_horizon': 5,
-                'lstm_units': 64,
-                'dropout_rate': 0.3
-            },
-            'training': {
-                'epochs': 50,
-                'batch_size': 64,
-                'validation_split': 0.15,
-                'test_split': 0.15,
-                'early_stopping_patience': 10,
-                'lr_reduction_factor': 0.5,
-                'lr_patience': 5,
-                'min_lr': 0.0001,
-                'random_seed': 42
-            }
-        }
+    config = load_config(args.config)
+    
+    # Create output directory if it doesn't exist
+    output_dir = os.path.join(PROJECT_ROOT, args.output)
+    os.makedirs(output_dir, exist_ok=True)
     
     # Override config with command line arguments
     if args.epochs:
@@ -83,8 +94,8 @@ def main():
         config['training']['batch_size'] = args.batch_size
     
     # Add output directory to config
-    config['training']['checkpoint_dir'] = os.path.join(args.output, 'checkpoints')
-    config['training']['log_dir'] = os.path.join(args.output, 'logs')
+    config['training']['checkpoint_dir'] = os.path.join(output_dir, 'checkpoints')
+    config['training']['log_dir'] = os.path.join(output_dir, 'logs')
     
     # Load data
     print(f"Loading data from {args.data}")
@@ -107,7 +118,8 @@ def main():
         X, y,
         validation_split=config['training']['validation_split'],
         test_split=config['training']['test_split'],
-        random_seed=config['training']['random_seed']
+        random_seed=config['training']['random_seed'],
+        max_samples=args.max_samples
     )
     
     print(f"Data splits:")
@@ -141,11 +153,11 @@ def main():
         feature_names, 
         test_results, 
         config, 
-        args.output
+        output_dir
     )
     
     print("\nTraining complete!")
-    print(f"All model artifacts saved to {args.output}")
+    print(f"All model artifacts saved to {output_dir}")
 
 
 if __name__ == "__main__":

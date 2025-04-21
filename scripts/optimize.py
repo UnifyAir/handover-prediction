@@ -18,30 +18,33 @@ from data.data_utils import load_mobility_data
 from src.preprocessing import prepare_sequences
 from src.trainer import prepare_train_val_test_split, train_model, evaluate_model
 
+# Add the project root to the Python path
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(PROJECT_ROOT)
+
 
 def parse_args():
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(description='Optimize hyperparameters for the mobility prediction model')
-    
-    parser.add_argument('--data', type=str, required=True, 
-                        help='Path to the mobility data file (.pkl or .csv)')
-    parser.add_argument('--config', type=str, default='../configs/optimization_config.yaml',
+    parser = argparse.ArgumentParser(description='Optimize model hyperparameters')
+    parser.add_argument('--data', type=str, required=True,
+                        help='Path to the mobility data file (.parquet, .pkl, .csv, or .npy)')
+    parser.add_argument('--config', type=str, default='configs/optimization_config.yaml',
                         help='Path to optimization configuration file')
-    parser.add_argument('--output', type=str, default='../models/optimization',
+    parser.add_argument('--output', type=str, default='models/optimized',
                         help='Directory to save optimization results')
-    parser.add_argument('--trials', type=int, default=None,
-                        help='Number of optimization trials (overrides config)')
-    parser.add_argument('--metric', type=str, default=None, 
-                        help='Metric to optimize (e.g., val_loss, val_accuracy)')
-    
+    parser.add_argument('--n-trials', type=int, help='Number of optimization trials')
+    parser.add_argument('--cv-folds', type=int, help='Number of cross-validation folds')
     return parser.parse_args()
 
 
 def load_config(config_path):
     """Load configuration from YAML file."""
+    # Convert relative path to absolute if needed
+    if not os.path.isabs(config_path):
+        config_path = os.path.join(PROJECT_ROOT, config_path)
+    
     with open(config_path, 'r') as f:
-        config = yaml.safe_load(f)
-    return config
+        return yaml.safe_load(f)
 
 
 def generate_hyperparameter_combinations(param_grid, max_trials=None):
@@ -119,45 +122,12 @@ def main():
     # Parse command line arguments
     args = parse_args()
     
-    # Ensure output directory exists
-    os.makedirs(args.output, exist_ok=True)
-    
     # Load configuration
-    try:
-        config = load_config(args.config)
-        print(f"Loaded optimization configuration from {args.config}")
-    except Exception as e:
-        print(f"Error loading configuration: {e}")
-        print("Using default optimization configuration")
-        config = {
-            'model_params': {
-                'lstm_units': [32, 64, 128],
-                'dropout_rate': [0.2, 0.3, 0.4]
-            },
-            'training_params': {
-                'batch_size': [32, 64, 128],
-                'learning_rate': [0.001, 0.0005, 0.0001]
-            },
-            'optimization': {
-                'max_trials': 10,
-                'metric': 'val_loss',
-                'mode': 'min'
-            },
-            'model': {
-                'sequence_length': 20,
-                'prediction_horizon': 5
-            },
-            'training': {
-                'epochs': 30,
-                'early_stopping_patience': 10
-            }
-        }
+    config = load_config(args.config)
     
-    # Override config with command line arguments
-    if args.trials:
-        config['optimization']['max_trials'] = args.trials
-    if args.metric:
-        config['optimization']['metric'] = args.metric
+    # Create output directory if it doesn't exist
+    output_dir = os.path.join(PROJECT_ROOT, args.output)
+    os.makedirs(output_dir, exist_ok=True)
     
     # Load data
     print(f"Loading data from {args.data}")
@@ -245,7 +215,7 @@ def main():
     
     # Save results
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    results_file = os.path.join(args.output, f"optimization_results_{timestamp}.pkl")
+    results_file = os.path.join(output_dir, f"optimization_results_{timestamp}.pkl")
     joblib.dump(results, results_file)
     
     # Save summary as YAML
@@ -260,7 +230,7 @@ def main():
         }
     }
     
-    summary_file = os.path.join(args.output, f"optimization_summary_{timestamp}.yaml")
+    summary_file = os.path.join(output_dir, f"optimization_summary_{timestamp}.yaml")
     with open(summary_file, 'w') as f:
         yaml.dump(summary, f)
     

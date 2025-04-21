@@ -8,6 +8,9 @@ from datetime import datetime
 import pickle
 import yaml
 from sklearn.model_selection import train_test_split
+import numpy as np
+
+from .architecture import build_mobility_prediction_model
 
 
 def train_model(X_train, y_train, X_val, y_val, model_config, training_config):
@@ -25,8 +28,6 @@ def train_model(X_train, y_train, X_val, y_val, model_config, training_config):
     Returns:
         Trained model and training history
     """
-    from src.model import build_mobility_prediction_model
-    
     # Build model
     input_shape = (X_train.shape[1], X_train.shape[2])
     model = build_mobility_prediction_model(
@@ -105,7 +106,7 @@ def evaluate_model(model, X_test, y_test):
     return results
 
 
-def prepare_train_val_test_split(X, y, validation_split=0.15, test_split=0.15, random_seed=42):
+def prepare_train_val_test_split(X, y, validation_split=0.15, test_split=0.15, random_seed=42, max_samples=None):
     """
     Split data into training, validation, and test sets.
     
@@ -115,10 +116,18 @@ def prepare_train_val_test_split(X, y, validation_split=0.15, test_split=0.15, r
         validation_split: Fraction of data to use for validation
         test_split: Fraction of data to use for testing
         random_seed: Random seed for reproducibility
+        max_samples: Maximum number of samples to use (for memory efficiency)
         
     Returns:
         X_train, X_val, X_test, y_train, y_val, y_test
     """
+    # If max_samples is provided, randomly sample a subset
+    if max_samples is not None and max_samples < len(X):
+        print(f"Using {max_samples:,} samples out of {len(X):,} for memory efficiency")
+        indices = np.random.RandomState(random_seed).permutation(len(X))[:max_samples]
+        X = X[indices]
+        y = y[indices]
+    
     # First split off the test set
     test_val_size = validation_split + test_split
     X_train, X_temp, y_train, y_temp = train_test_split(

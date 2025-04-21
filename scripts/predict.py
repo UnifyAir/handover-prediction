@@ -15,7 +15,9 @@ from datetime import datetime
 
 # Import from project modules
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+# Add the project root to the Python path
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(PROJECT_ROOT)
 from data.data_utils import load_mobility_data
 from src.preprocessing import prepare_data_for_inference
 
@@ -30,9 +32,9 @@ def parse_args():
                         help='Path to input data file (.pkl or .csv)')
     parser.add_argument('--scaler', type=str, default=None,
                         help='Path to feature scaler file (.pkl)')
-    parser.add_argument('--config', type=str, default='../configs/inference_config.yaml',
+    parser.add_argument('--config', type=str, default='configs/inference_config.yaml',
                         help='Path to inference configuration file')
-    parser.add_argument('--output', type=str, default='../predictions',
+    parser.add_argument('--output', type=str, default='predictions',
                         help='Directory to save prediction results')
     parser.add_argument('--threshold', type=float, default=None,
                         help='Prediction threshold (overrides config)')
@@ -44,9 +46,12 @@ def parse_args():
 
 def load_config(config_path):
     """Load configuration from YAML file."""
+    # Convert relative path to absolute if needed
+    if not os.path.isabs(config_path):
+        config_path = os.path.join(PROJECT_ROOT, config_path)
+    
     with open(config_path, 'r') as f:
-        config = yaml.safe_load(f)
-    return config
+        return yaml.safe_load(f)
 
 
 def load_model(model_path):
@@ -90,7 +95,8 @@ def main():
     args = parse_args()
     
     # Ensure output directory exists
-    os.makedirs(args.output, exist_ok=True)
+    output_dir = os.path.join(PROJECT_ROOT, args.output)
+    os.makedirs(output_dir, exist_ok=True)
     
     # Load configuration
     try:
@@ -176,9 +182,9 @@ def main():
     # Save results
     timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
     if args.user_id:
-        output_file = os.path.join(args.output, f"predictions_{args.user_id}_{timestamp_str}.json")
+        output_file = os.path.join(output_dir, f"predictions_{args.user_id}_{timestamp_str}.json")
     else:
-        output_file = os.path.join(args.output, f"predictions_{timestamp_str}.json")
+        output_file = os.path.join(output_dir, f"predictions_{timestamp_str}.json")
     
     with open(output_file, 'w') as f:
         json.dump(results, f, indent=2)

@@ -1,0 +1,48 @@
+optimization:
+  # Hyperparameter search space
+  parameters:
+    sequence_length:
+      type: int
+      range: [10, 30]
+      step: 5
+    lstm_units:
+      type: int
+      range: [32, 256]
+      step: 32
+    dropout:
+      type: float
+      range: [0.1, 0.5]
+      step: 0.1
+    learning_rate:
+      type: float
+      range: [0.0001, 0.01]
+      scale: log
+    batch_size:
+      type: int
+      range: [16, 64]
+      step: 16
+  
+  # Optimization settings
+  settings:
+    method: bayesian  # Options: random, grid, bayesian
+    n_trials: 50
+    cv_folds: 5
+    metric: val_f1_score
+    direction: maximize
+    
+  # Early stopping
+  early_stopping:
+    patience: 5
+    monitor: val_loss
+    
+  # Output configuration
+  output:
+    save_results: true
+    save_best_model: true
+    save_all_models: false
+    metrics:
+      - accuracy
+      - precision
+      - recall
+      - f1_score
+      - confusion_matrix 

@@ -27,5 +27,7 @@ env/
 *.h5
 *.pkl
 *.log
+*.parquet
+*.npy
 tensorboard/
 wandb/
